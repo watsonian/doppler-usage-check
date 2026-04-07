@@ -1,0 +1,32 @@
+name: 'Doppler Usage Check'
+description: 'Detects whether Doppler is being used in a repository and surfaces a non-blocking warning on PRs when not found.'
+
+branding:
+  icon: 'shield'
+  color: 'purple'
+
+inputs:
+  custom-message:
+    description: 'Override the warning message shown when Doppler is not detected'
+    required: false
+    default: ''
+  github-token:
+    description: 'Token for GitHub API calls. The default token can list variables but may not have permission to list secret names.'
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  doppler-detected:
+    description: "'true' if any Doppler signal was found, 'false' otherwise"
+    value: ${{ steps.check.outputs.doppler-detected }}
+
+runs:
+  using: 'composite'
+  steps:
+    - id: check
+      shell: bash
+      env:
+        INPUT_CUSTOM_MESSAGE: ${{ inputs.custom-message }}
+        GH_TOKEN: ${{ inputs.github-token }}
+        HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      run: ${{ github.action_path }}/scripts/check-doppler.sh
